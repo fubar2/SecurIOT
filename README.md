@@ -9,9 +9,9 @@ together with host:port specific destination port wordclouds as part of the fing
 for a new IOT device. 
 
 For example, to make a decent sized file to analyse,
-{{
-sudo tcpdump host [IOT IP] -i eth0 -c 10000 -w IOTNAME.pcap
-}}
+
+**sudo tcpdump host [IOT IP] -i eth0 -c 10000 -w IOTNAME.pcap**
+
 
 will capture all traffic to and from any device IP address and produce wordclouds showing 
 how much goes where.
