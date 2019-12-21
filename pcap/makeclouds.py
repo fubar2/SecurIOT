@@ -6,6 +6,7 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import socket
 import os
+from random import randint
 
 infname = '/home/ross/rossgit/pcap/eg2.pcap'
 infname = '/home/ross/rossgit/pcap/example.pcap'
@@ -13,6 +14,13 @@ infname = '/home/ross/rossgit/pcap/example.pcap'
 pnames = ['IP','TCP','ARP','UDP','ICMP']
 pobj = [IP,TCP,ARP,UDP,ICMP]
 
+def random_color_func(word=None, font_size=None, position=None,  orientation=None, font_path=None, random_state=None):
+	"""https://stackoverflow.com/questions/43043263/word-cloud-in-python-with-customised-colour"""
+    h = int(360.0 * 21.0 / 255.0) # orange base
+    s = int(100.0 * 255.0 / 255.0)
+    l = int(100.0 * float(randint(60, 120)) / 255.0)
+
+    return "hsl({}, {}%, {}%)".format(h, s, l)
 
 def getsrcdest(pkt,proto):
     """need from every packet of interest"""
@@ -92,7 +100,9 @@ def processPcap(seenIP,seenPORT,deens):
                 sf,newsaucen = lookup(seenIP[pn][nsauce],nsauce,deens) # expensive operation so moved here
                 # print(newsaucen,':',sf)
                 outfn = '%s_%s_wordcloud_%s.png' % (newsaucen,pn,os.path.basename(infname))
-                wc = WordCloud(background_color="white",width=1200, height=1000,max_words=200,min_font_size=20).generate_from_frequencies(sf)
+                wc = WordCloud(background_color="white",width=1200, height=1000,max_words=200,
+                 min_font_size=20,
+				color_func=random_color_func).generate_from_frequencies(sf)
                 f = plt.figure(figsize=(10, 10))
                 plt.imshow(wc, interpolation='bilinear')
                 plt.axis('off')
@@ -109,7 +119,9 @@ def processPcap(seenIP,seenPORT,deens):
         if kl > 5:
             print('sport=',snameport,'sf=',sf)
             outfn = '%s_wordcloud_%s.png' % (snameport,os.path.basename(infname))
-            wc = WordCloud(background_color="white",width=1200, height=1000,max_words=200,min_font_size=20).generate_from_frequencies(sf)
+            wc = WordCloud(background_color="white",width=1200, height=1000,
+				max_words=200,min_font_size=10,
+				color_func=random_color_func).generate_from_frequencies(sf)
             f = plt.figure(figsize=(10, 10))
             plt.imshow(wc, interpolation='bilinear')
             plt.axis('off')
@@ -118,6 +130,8 @@ def processPcap(seenIP,seenPORT,deens):
             f.savefig(outfn, bbox_inches='tight')
     return(deens)
 
+
+    
 if __name__=="__main__":
     seenIP,seenPORT = readPcap(infname,{},{})
     print('## reading done')
