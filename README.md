@@ -29,17 +29,17 @@ Ports:
 pmap contains a simple but reasonably fast threaded port scanner.
 It works something like this:
 
-Enter a remote host to scan: 127.0.0.1
-------------------------------------------------------------
-Please wait, scanning remote host 127.0.0.1
-------------------------------------------------------------
-port 22 open
-port 631 open
-port 5001 open
-port 32772 open
-port 43208 open
-port 51413 open
-Scanning Completed in:  0:00:07.013983 secs
+	Enter a remote host to scan: 127.0.0.1
+	------------------------------------------------------------
+	Please wait, scanning remote host 127.0.0.1
+	------------------------------------------------------------
+	port 22 open
+	port 631 open
+	port 5001 open
+	port 32772 open
+	port 43208 open
+	port 51413 open
+	Scanning Completed in:  0:00:07.013983 secs
 
 Because we can.
 
