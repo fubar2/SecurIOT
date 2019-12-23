@@ -9,8 +9,8 @@ import os
 from random import randint
 
 # infname = '/home/ross/rossgit/pcap/eg2.pcap'
-infname = '/home/ross/rossgit/pcap/example.pcap'
-
+# infname = '/home/ross/rossgit/pcap/example.pcap'
+infname = "/home/ross/rossgit/pcap/tplinkHS100.gz.pcap.gz"
 pnames = ['IP','TCP','ARP','UDP','ICMP']
 pobj = [IP,TCP,ARP,UDP,ICMP]
 
@@ -105,6 +105,7 @@ def readPcap(infile,seenIP,seenPORT):
 
 		  
 def processPcap(seenIP,seenPORT,deens):
+	pics = []
 	for i,proto in enumerate(pobj):
 		pn = pnames[i]
 		for nsauce in seenIP[pn].keys():
@@ -123,13 +124,14 @@ def processPcap(seenIP,seenPORT,deens):
 				wc = WordCloud(background_color="white",width=1200, height=1000,max_words=200,
 				 min_font_size=20,
 				color_func=random_color_func).generate_from_frequencies(sf)
-				f = plt.figure(figsize=(50, 50))
+				f = plt.figure(figsize=(20, 20))
 				plt.imshow(wc, interpolation='bilinear')
 				plt.axis('off')
 				plt.title('%s %s destination word cloud' % (nsauce,pn))
 				# plt.show()
 				f.savefig(outfn, bbox_inches='tight')
 				plt.clf() 
+				pics.append(outfn)
 
 	for sport in seenPORT.keys():
 		k = seenPORT[sport].keys()
@@ -149,27 +151,48 @@ def processPcap(seenIP,seenPORT,deens):
 			wc = WordCloud(background_color="white",width=1200, height=1000,
 				max_words=200,min_font_size=10,
 				color_func=random_color_func).generate_from_frequencies(sf)
-			f = plt.figure(figsize=(50, 50))
+			f = plt.figure(figsize=(20, 20))
 			plt.imshow(wc, interpolation='bilinear')
 			plt.axis('off')
 			plt.title('%s destination port word cloud' % (snameport))
 			# plt.show()
 			f.savefig(outfn, bbox_inches='tight')
 			plt.clf() 
-	return(deens)
+			pics.append(outfn)
+	return(deens,pics)
 
-
+def writeIndex(pics):
+	"""make a simple html page to view report
+	"""
+	h = ["""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+</head><body>
+<h1>Crude example Makeclouds report</h1>\n<table border="1">""",]
+	for p in pics:
+		s = "<tr><td><img src='%s' alt='%s'></td></tr>" % (p,p)
+		h.append(s)
+	h.append("</table></body></html>")
+	f = open('makeclouds.html','w')
+	f.write('\n'.join(h))
+	f.close()
+    
 	
 if __name__=="__main__":
 	seenIP,seenPORT,allIP,allPORT = readPcap(infname,{},{})
 	print('## reading done')
-	deens = processPcap(seenIP,seenPORT,{})
+	deens,pics = processPcap(seenIP,seenPORT,{})
+	print('pics:',pics)
+	writeIndex(pics)
 	print(seenIP)
 	print(seenPORT)
 	print(deens)
 	if doGraphs:
-		f = plt.figure(figsize=(50, 50))
+		f = plt.figure(figsize=(30, 30))
 		nx.draw(gIP, with_labels=True, font_weight='bold')
 		plt.savefig('ipnet.jpg')
+		plt.clf() 
 		nx.draw(gPORT, with_labels=True, font_weight='bold')
 		plt.savefig('portnet.jpg')
+
