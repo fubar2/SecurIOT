@@ -10,11 +10,12 @@ from random import randint
 
 # infname = '/home/ross/rossgit/pcap/eg2.pcap'
 # infname = '/home/ross/rossgit/pcap/example.pcap'
-infname = "/home/ross/rossgit/pcap/tplinkHS100.gz.pcap.gz"
+# infname = "/home/ross/rossgit/pcap/tplinkHS100.gz.pcap.gz"
+infname = "/home/ross/rossgit/pcap/xiaofang_setupandtest.gz.pcap.gz"
 pnames = ['IP','TCP','ARP','UDP','ICMP']
 pobj = [IP,TCP,ARP,UDP,ICMP]
 
-doGraphs = False # these are same as wordclouds for each ip and too big for all ip/port to make any sense AFAIK
+doGraphs = True # these are same as wordclouds for each ip and too big for all ip/port to make any sense AFAIK
 
 if doGraphs: 
 	# network graph construction and plotting is relatively easy but 
@@ -124,7 +125,7 @@ def processPcap(seenIP,seenPORT,deens):
 				wc = WordCloud(background_color="white",width=1200, height=1000,max_words=200,
 				 min_font_size=20,
 				color_func=random_color_func).generate_from_frequencies(sf)
-				f = plt.figure(figsize=(20, 20))
+				f = plt.figure(figsize=(10, 10))
 				plt.imshow(wc, interpolation='bilinear')
 				plt.axis('off')
 				plt.title('%s %s destination word cloud' % (nsauce,pn))
@@ -151,7 +152,7 @@ def processPcap(seenIP,seenPORT,deens):
 			wc = WordCloud(background_color="white",width=1200, height=1000,
 				max_words=200,min_font_size=10,
 				color_func=random_color_func).generate_from_frequencies(sf)
-			f = plt.figure(figsize=(20, 20))
+			f = plt.figure(figsize=(10, 10))
 			plt.imshow(wc, interpolation='bilinear')
 			plt.axis('off')
 			plt.title('%s destination port word cloud' % (snameport))
@@ -164,12 +165,13 @@ def processPcap(seenIP,seenPORT,deens):
 def writeIndex(pics):
 	"""make a simple html page to view report
 	"""
+	outfn = '%s_wordcloud.html' % (os.path.basename(infname))
 	h = ["""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 </head><body>
-<h1>Crude example Makeclouds report</h1>\n<table border="1">""",]
+<h1>Crude example %s Makeclouds report</h1>\n<table border="1">""" % os.path.basename(infname),]
 	for p in pics:
 		s = "<tr><td><img src='%s' alt='%s'></td></tr>" % (p,p)
 		h.append(s)
@@ -178,7 +180,7 @@ def writeIndex(pics):
 	f.write('\n'.join(h))
 	f.close()
     
-	
+
 if __name__=="__main__":
 	seenIP,seenPORT,allIP,allPORT = readPcap(infname,{},{})
 	print('## reading done')
@@ -189,10 +191,28 @@ if __name__=="__main__":
 	print(seenPORT)
 	print(deens)
 	if doGraphs:
-		f = plt.figure(figsize=(30, 30))
-		nx.draw(gIP, with_labels=True, font_weight='bold')
-		plt.savefig('ipnet.jpg')
+		f = plt.figure(figsize=(10, 10))
+		arc_weight = nx.get_edge_attributes(gIP,'weight')
+		edges,weights = zip(*nx.get_edge_attributes(gIP,'weight').items())
+		ws = sum(weights)
+		weights = [float(x)/ws for x in weights] 
+		print('edges:',edges,'weights:',weights)
+		node_pos=nx.spring_layout(gIP) 
+		nx.draw_networkx(gIP, node_pos,node_size=450,node_color='y')
+		#nx.draw(gIP, with_labels=False, font_weight='bold')
+		nx.draw_networkx_edges(gIP, node_pos,  edge_color=weights)
+		nx.draw_networkx_edge_labels(gIP, node_pos, edge_labels=arc_weight)
+		outfn = '%s_ipnet.jpg' % os.path.basename(infname)
+		plt.savefig(outfn)
+		pics.append(outfn)
 		plt.clf() 
-		nx.draw(gPORT, with_labels=True, font_weight='bold')
-		plt.savefig('portnet.jpg')
+		arc_weight = nx.get_edge_attributes(gPORT,'weight')
+		node_pos=nx.spring_layout(gPORT) 
+		nx.draw_networkx(gPORT, node_pos,node_size=450,node_color='y')
+		nx.draw_networkx_edges(gPORT, node_pos)
+		nx.draw_networkx_edge_labels(gPORT, node_pos, edge_labels=arc_weight)
+		outfn = '%s_portnet.jpg' % os.path.basename(infname)
+		plt.savefig(outfn)
+		pics.append(outfn)
+	writeIndex(pics)
 
