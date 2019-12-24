@@ -10,8 +10,6 @@
 # 50127/udp open|filtered unknown
 # Nmap done: 1 IP address (1 host up) scanned in 6949.53 seconds
 # but faster at about 7 seconds for the same host
-# for stats also can use tshark on pcap
-# tshark -q -z hosts -z dns,tree -z bootp,stat -z conv,tcp -z conv,udp -z conv,ip -z endpoints,udp -z io,phs -r xiaofang_setupandtest.gz.pcap.gz > foo
 
 import threading
 from queue import Queue

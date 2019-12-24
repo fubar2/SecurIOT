@@ -8,6 +8,12 @@ import socket
 import os
 from random import randint
 
+
+# parse a pcap file and produce wordclouds for each IP destination packets
+# for stats also can use tshark on pcap - eg:
+# tshark -q -z hosts -z dns,tree -z bootp,stat -z conv,tcp -z conv,udp -z conv,ip -z endpoints,udp -z io,phs -r xiaofang_setupandtest.gz.pcap.gz > foo
+
+
 # infname = '/home/ross/rossgit/pcap/eg2.pcap'
 # infname = '/home/ross/rossgit/pcap/example.pcap'
 # infname = "/home/ross/rossgit/pcap/tplinkHS100.gz.pcap.gz"
