@@ -61,15 +61,9 @@ if __name__ == "__main__":
 	if not '.' in remoteServer: 
 		remoteServer = '127.0.0.1'
 	remoteServerIP  = socket.gethostbyname(remoteServer)
-
-	# Print a nice banner with information on which host we are about to scan
-	foo = "-" * 60 + '\n'
-	print(foo+"Please wait, scanning remote host %s \n" % remoteServerIP+foo)
-
-
+	print("Please wait, scanning remote host %s \n" % remoteServerIP)
 	t1 = datetime.now()
 	doRun()
-
 	t2 = datetime.now()
 	total =  t2 - t1
 	print ('Scanning Completed in: ', total,'secs')

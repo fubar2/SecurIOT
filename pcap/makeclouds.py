@@ -16,8 +16,8 @@ from random import randint
 
 # infname = '/home/ross/rossgit/pcap/eg2.pcap'
 # infname = '/home/ross/rossgit/pcap/example.pcap'
-# infname = "/home/ross/rossgit/pcap/tplinkHS100.gz.pcap.gz"
-infname = "/home/ross/rossgit/pcap/xiaofang_setupandtest.gz.pcap.gz"
+infname = "/home/ross/rossgit/pcap/tplinkHS100.gz.pcap.gz"
+# infname = "/home/ross/rossgit/pcap/xiaofang_setupandtest.gz.pcap.gz"
 pnames = ['IP','TCP','ARP','UDP','ICMP']
 pobj = [IP,TCP,ARP,UDP,ICMP]
 
@@ -121,8 +121,8 @@ def processPcap(seenIP,seenPORT,deens):
 			if kl > 1:
 				sf,newsaucen = lookup(seenIP[pn][nsauce],nsauce,deens) # expensive operation so moved here
 				if doGraphs:
-					nody = list(sf.keys())
-					nody.append(newsaucen)
+					nody = sf.keys()
+					#nody.append(newsaucen)
 					gIP.add_nodes_from(nody)
 					edgy = [(newsaucen,x,{'weight':sf[x]}) for x in sf]
 					gIP.add_edges_from(edgy)
@@ -168,7 +168,7 @@ def processPcap(seenIP,seenPORT,deens):
 def writeIndex(pics):
 	"""make a simple html page to view report
 	"""
-	outfn = '%s_wordcloud.html' % (os.path.basename(infname))
+	outfn = '%s_report.html' % (os.path.basename(infname))
 	h = ["""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -178,50 +178,20 @@ def writeIndex(pics):
 	for p in pics:
 		if p.endswith('txt'):
 			t = open(p,'r').readlines()
+			reprt = ''.join(t[1:-1])  # ignore === lines at start and end
 			s = "<tr><td><a href='%s'>tshark %s report</a><br><pre style='white-space: pre-wrap;'>%s</pre></td></tr>" %\
-				(p,p.split('_')[0],''.join(t[1:-1])) 
-			# ignore === lines at start and end
+				(p,p.split('_')[0],reprt)
 		else:
 			s = "<tr><td><img src='%s' alt='%s'></td></tr>" % (p,p)
 		h.append(s)
 	h.append("</table></body></html>")
-	f = open('makeclouds.html','w')
+	f = open(outfn,'w')
 	f.write('\n'.join(h))
 	f.close()
 
 def doTshark():
 	"""grab and process - sample part - fugly - some have table headers
-	cl = "tshark -q -z hosts -z dns,tree -z bootp,stat -z conv,tcp -z conv,udp -z conv,ip -z endpoints,udp -z io,phs -r %s" % (infname)
-	
-	===================================================================
-Protocol Hierarchy Statistics
-Filter:
-
-eth                                      frames:2379 bytes:1340216
-  ip                                     frames:2327 bytes:1336746
-	udp                                  frames:2157 bytes:1284526
-	  ssdp                               frames:16 bytes:3328
-	  mdns                               frames:9 bytes:1923
-	  bootp                              frames:9 bytes:3078
-	  dns                                frames:14 bytes:1400
-	  ntp                                frames:4 bytes:360
-	  data                               frames:2105 bytes:1274437
-	tcp                                  frames:165 bytes:51718
-	  ssl                                frames:43 bytes:19288
-		tcp.segments                     frames:5 bytes:3850
-	  _ws.malformed                      frames:10 bytes:10920
-	icmp                                 frames:5 bytes:502
-  ipv6                                   frames:15 bytes:1505
-	udp                                  frames:3 bytes:609
-	  mdns                               frames:3 bytes:609
-	icmpv6                               frames:12 bytes:896
-  arp                                    frames:31 bytes:1302
-  llc                                    frames:1 bytes:20
-	basicxid                             frames:1 bytes:20
-  eapol                                  frames:5 bytes:643
-===================================================================
-
-	
+	cl = "tshark -q -z hosts -z dns,tree -z bootp,stat -z conv,tcp -z conv,udp -z conv,ip -z endpoints,udp -z io,phs -r %s" % (infname)	
 	"""
 	rclist = ["-z hosts","-z dns,tree", "-z bootp,stat", "-z conv,tcp", "-z conv,udp", "-z conv,ip", "-z endpoints,udp", "-z io,phs","-P"]
 	rfnames = ['hosts','dns','dhcp','tcpconv','udpconv','ipconv','udpendpoints','iophs','pdump']
@@ -238,25 +208,27 @@ if __name__=="__main__":
 	doTshark()
 	if doGraphs:
 		f = plt.figure(figsize=(10, 10))
-		arc_weight = nx.get_edge_attributes(gIP,'weight')
+		n_weight = nx.get_edge_attributes(gIP,'weight') # count
 		edges,weights = zip(*nx.get_edge_attributes(gIP,'weight').items())
 		ws = sum(weights)
-		weights = [float(x)/ws for x in weights] 
+		weights = [float(x)/ws for x in weights] # fractional weights summing to 1
 		node_pos=nx.spring_layout(gIP) 
 		nx.draw_networkx(gIP, node_pos,node_size=450,node_color='y')
-		#nx.draw(gIP, with_labels=False, font_weight='bold')
 		nx.draw_networkx_edges(gIP, node_pos,  edge_color=weights)
-		nx.draw_networkx_edge_labels(gIP, node_pos, edge_labels=arc_weight)
+		nx.draw_networkx_edge_labels(gIP, node_pos, edge_labels=n_weight)
 		outfn = '%s_ipnet.jpg' % os.path.basename(infname)
 		plt.title('Network of traffic between IP addresses in %s' % os.path.basename(infname))
 		plt.savefig(outfn)
 		pics.append(outfn)
 		plt.clf() 
-		arc_weight = nx.get_edge_attributes(gPORT,'weight')
+		n_weight = nx.get_edge_attributes(gPORT,'weight')
+		edges,weights = zip(*nx.get_edge_attributes(gPORT,'weight').items())
+		ws = sum(weights)
+		weights = [float(x)/ws for x in weights] 
 		node_pos=nx.spring_layout(gPORT) 
 		nx.draw_networkx(gPORT, node_pos,node_size=450,node_color='y')
 		nx.draw_networkx_edges(gPORT, node_pos)
-		nx.draw_networkx_edge_labels(gPORT, node_pos, edge_labels=arc_weight)
+		nx.draw_networkx_edge_labels(gPORT, node_pos, edge_labels=n_weight)
 		outfn = '%s_portnet.jpg' % os.path.basename(infname)
 		plt.title('Network of traffic between port numbers in %s' % os.path.basename(infname))
 		plt.savefig(outfn)
