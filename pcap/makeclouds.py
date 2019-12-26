@@ -2,6 +2,9 @@ from scapy.all import *
 from wordcloud import WordCloud
 from collections import Counter
 import matplotlib
+from matplotlib import cm
+from matplotlib.colors import ListedColormap, LinearSegmentedColormap
+
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import socket
@@ -16,8 +19,8 @@ from random import randint
 
 # infname = '/home/ross/rossgit/pcap/eg2.pcap'
 # infname = '/home/ross/rossgit/pcap/example.pcap'
-infname = "/home/ross/rossgit/pcap/tplinkHS100.gz.pcap.gz"
-# infname = "/home/ross/rossgit/pcap/xiaofang_setupandtest.gz.pcap.gz"
+# infname = "/home/ross/rossgit/pcap/tplinkHS100.gz.pcap.gz"
+infname = "/home/ross/rossgit/pcap/xiaofang_setupandtest.gz.pcap.gz"
 pnames = ['IP','TCP','ARP','UDP','ICMP']
 pobj = [IP,TCP,ARP,UDP,ICMP]
 
@@ -192,9 +195,153 @@ def writeIndex(pics):
 def doTshark():
 	"""grab and process - sample part - fugly - some have table headers
 	cl = "tshark -q -z hosts -z dns,tree -z bootp,stat -z conv,tcp -z conv,udp -z conv,ip -z endpoints,udp -z io,phs -r %s" % (infname)	
+	tshark: Invalid -z argument "credentials"; it must be one of:
+     afp,srt
+     ancp,tree
+     ansi_a,bsmap
+     ansi_a,dtap
+     ansi_map
+     bacapp_instanceid,tree
+     bacapp_ip,tree
+     bacapp_objectid,tree
+     bacapp_service,tree
+     camel,counter
+     camel,srt
+     collectd,tree
+     conv,bluetooth
+     conv,eth
+     conv,fc
+     conv,fddi
+     conv,ip
+     conv,ipv6
+     conv,ipx
+     conv,jxta
+     conv,mptcp
+     conv,ncp
+     conv,rsvp
+     conv,sctp
+     conv,sll
+     conv,tcp
+     conv,tr
+     conv,udp
+     conv,usb
+     conv,wlan
+     dcerpc,srt
+     dests,tree
+     dhcp,stat
+     diameter,avp
+     diameter,srt
+     dns,tree
+     endpoints,bluetooth
+     endpoints,eth
+     endpoints,fc
+     endpoints,fddi
+     endpoints,ip
+     endpoints,ipv6
+     endpoints,ipx
+     endpoints,jxta
+     endpoints,mptcp
+     endpoints,ncp
+     endpoints,rsvp
+     endpoints,sctp
+     endpoints,sll
+     endpoints,tcp
+     endpoints,tr
+     endpoints,udp
+     endpoints,usb
+     endpoints,wlan
+     expert
+     f5_tmm_dist,tree
+     f5_virt_dist,tree
+     fc,srt
+     flow,any
+     flow,icmp
+     flow,icmpv6
+     flow,lbm_uim
+     flow,tcp
+     follow,http
+     follow,tcp
+     follow,tls
+     follow,udp
+     gsm_a
+     gsm_a,bssmap
+     gsm_a,dtap_cc
+     gsm_a,dtap_gmm
+     gsm_a,dtap_mm
+     gsm_a,dtap_rr
+     gsm_a,dtap_sacch
+     gsm_a,dtap_sm
+     gsm_a,dtap_sms
+     gsm_a,dtap_ss
+     gsm_a,dtap_tp
+     gsm_map,operation
+     gtp,srt
+     h225,counter
+     h225_ras,rtd
+     hart_ip,tree
+     hosts
+     hpfeeds,tree
+     http,stat
+     http,tree
+     http2,tree
+     http_req,tree
+     http_seq,tree
+     http_srv,tree
+     icmp,srt
+     icmpv6,srt
+     io,phs
+     io,stat
+     ip_hosts,tree
+     ip_srcdst,tree
+     ipv6_dests,tree
+     ipv6_hosts,tree
+     ipv6_ptype,tree
+     ipv6_srcdst,tree
+     isup_msg,tree
+     lbmr_queue_ads_queue,tree
+     lbmr_queue_ads_source,tree
+     lbmr_queue_queries_queue,tree
+     lbmr_queue_queries_receiver,tree
+     lbmr_topic_ads_source,tree
+     lbmr_topic_ads_topic,tree
+     lbmr_topic_ads_transport,tree
+     lbmr_topic_queries_pattern,tree
+     lbmr_topic_queries_pattern_receiver,tree
+     lbmr_topic_queries_receiver,tree
+     lbmr_topic_queries_topic,tree
+     ldap,srt
+     mac-lte,stat
+     megaco,rtd
+     mgcp,rtd
+     mtp3,msus
+     ncp,srt
+     osmux,tree
+     plen,tree
+     proto,colinfo
+     ptype,tree
+     radius,rtd
+     rlc-lte,stat
+     rpc,programs
+     rpc,srt
+     rtp,streams
+     rtsp,stat
+     rtsp,tree
+     sametime,tree
+     scsi,srt
+     sctp,stat
+     sip,stat
+     smb,sids
+     smb,srt
+     smb2,srt
+     smpp_commands,tree
+     sv
+     ucp_messages,tree
+     wsp,stat
+
+	
 	"""
-	rclist = ["-z hosts","-z dns,tree", "-z bootp,stat", "-z conv,tcp", "-z conv,udp", "-z conv,ip", "-z endpoints,udp", "-z io,phs","-P"]
-	rfnames = ['hosts','dns','dhcp','tcpconv','udpconv','ipconv','udpendpoints','iophs','pdump']
+	rclist = ["-z hosts","-z dns,tree", "-z dhcp,stat", "-z conv,tcp", "-z conv,udp", "-z conv,ip", "-z endpoints,udp", "-z io,phs","-z http,tree","-P"]
+	rfnames = ['hosts','dns','dhcpstat','tcpconv','udpconv','ipconv','udpendpoints','iophs','httptree','pdump']
 	for i,com in enumerate(rclist):
 		ofn = "%s_%s.txt" % (rfnames[i],os.path.basename(infname))
 		cl = "tshark -q %s -r %s > %s" % (com,infname,ofn)
@@ -207,14 +354,15 @@ if __name__=="__main__":
 	writeIndex(pics)
 	doTshark()
 	if doGraphs:
+		viridis = cm.get_cmap('viridis', 12)
 		f = plt.figure(figsize=(10, 10))
 		n_weight = nx.get_edge_attributes(gIP,'weight') # count
 		edges,weights = zip(*nx.get_edge_attributes(gIP,'weight').items())
 		ws = sum(weights)
 		weights = [float(x)/ws for x in weights] # fractional weights summing to 1
 		node_pos=nx.spring_layout(gIP) 
-		nx.draw_networkx(gIP, node_pos,node_size=450,node_color='y')
-		nx.draw_networkx_edges(gIP, node_pos,  edge_color=weights)
+		nx.draw_networkx(gIP, node_pos,node_size=450,node_color='y',edgelist=[])
+		nx.draw_networkx_edges(gIP, node_pos,  edge_color=weights,edge_cmap=viridis,edge_style="dashed")
 		nx.draw_networkx_edge_labels(gIP, node_pos, edge_labels=n_weight)
 		outfn = '%s_ipnet.jpg' % os.path.basename(infname)
 		plt.title('Network of traffic between IP addresses in %s' % os.path.basename(infname))
@@ -226,8 +374,8 @@ if __name__=="__main__":
 		ws = sum(weights)
 		weights = [float(x)/ws for x in weights] 
 		node_pos=nx.spring_layout(gPORT) 
-		nx.draw_networkx(gPORT, node_pos,node_size=450,node_color='y')
-		nx.draw_networkx_edges(gPORT, node_pos)
+		nx.draw_networkx(gPORT, node_pos,node_size=450,node_color='y',edgelist=[])
+		nx.draw_networkx_edges(gPORT, node_pos,edge_color=weights,edge_cmap=viridis,edge_style="dashed")
 		nx.draw_networkx_edge_labels(gPORT, node_pos, edge_labels=n_weight)
 		outfn = '%s_portnet.jpg' % os.path.basename(infname)
 		plt.title('Network of traffic between port numbers in %s' % os.path.basename(infname))
